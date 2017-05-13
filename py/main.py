@@ -8,8 +8,6 @@ from tweepy.error import TweepError
 app = Flask(__name__)
 app.secret_key = 'super secret key'
 
-CALLBACK = 'http://localhost:5000/login/callback'
-
 REQUEST_TOKEN_COOKIE = 'request_token'
 TOKEN_SECRET_COOKIE = 'token_secret'
 ACCESS_TOKEN_COOKIE = 'request_token'
@@ -21,7 +19,7 @@ def request_token():
     if not secrets:
         return 'Could not load twitter secrets'
 
-    auth = OAuthHandler(secrets['api_key'], secrets['secret'], CALLBACK)
+    auth = OAuthHandler(secrets['api_key'], secrets['secret'])
     try:
         redirect_url = auth.get_authorization_url()
     except TweepError as e:
@@ -34,7 +32,7 @@ def access_token():
     if not secrets:
         return 'Could not load twitter secrets'
 
-    auth = OAuthHandler(secrets['api_key'], secrets['secret'], CALLBACK)
+    auth = OAuthHandler(secrets['api_key'], secrets['secret'])
     request_token = request.args.get('oauth_token')
     verifier = request.args.get('oauth_verifier')
     auth.request_token = {
