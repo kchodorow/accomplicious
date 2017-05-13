@@ -15,6 +15,8 @@ ACCESS_TOKEN_SECRET_COOKIE = 'token_secret'
 
 @app.route('/login/get-request-token')
 def request_token():
+    if _is_logged_in():
+        return "Already logged in!"
     secrets = _get_twitter_secrets()
     if not secrets:
         return 'Could not load twitter secrets'
@@ -28,6 +30,8 @@ def request_token():
 
 @app.route('/login/callback')
 def access_token():
+    if _is_logged_in():
+        return "Already logged in!"
     secrets = _get_twitter_secrets()
     if not secrets:
         return 'Could not load twitter secrets'
@@ -54,12 +58,23 @@ def access_token():
     })
     return "logged in: %s" % access_token
 
+@app.route('/logout')
+def logout():
+    session.pop(ACCESS_TOKEN_COOKIE, None)
+    session.pop(ACCESS_TOKEN_SECRET_COOKIE, None)
+    return "Logged out"
+
+@app.route('/done')
+def done():
+    pass
+
 @app.teardown_appcontext
 def close(error):
     db.close_db()
 
 def _is_logged_in():
-    return session[ACCESS_TOKEN_COOKIE] and session[ACCESS_TOKEN_SECRET_COOKIE]
+    return ACCESS_TOKEN_COOKIE in session and \
+        ACCESS_TOKEN_SECRET_COOKIE in session
 
 def _get_twitter_secrets():
     return db.get_db().secrets.find_one({'_id' : 'twitter'})
