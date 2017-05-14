@@ -1,0 +1,37 @@
+<html>
+  <head>
+    <title>Accomplicious</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <style>
+.btn {
+  font-size: 18px;
+}
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="/">Accomploji</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="/app/user">User</a></li>
+            <li><a href="/app/logout">Logout</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="container">
+      <form action="/app/done" method="post">
+        <div class="row text-center" style="margin-top: 25%;">
+          <input class="form-control input-lg" name="accomplishment" id="thing" placeholder="Did a thing." />
+          <button type="submit" style="margin: 10px;" class="btn btn-defaul">Done</button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>

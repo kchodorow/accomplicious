@@ -5,7 +5,7 @@ Emogi-based accomplishment tracker.
 ## Prerequisites:
 
 ```
-pip install virtualenv Flask tweepy pymongo
+pip install virtualenv Flask tweepy pymongo emoji
 virtualenv venv
 ```
 
