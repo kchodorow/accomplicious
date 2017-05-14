@@ -9,18 +9,24 @@
 .btn {
   font-size: 18px;
 }
+#icon {
+  margin-top: -12px;
+}
     </style>
   </head>
   <body>
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
-          <a class="navbar-brand" href="/">Accomploji</a>
+          <a class="navbar-brand" href="/">
+            <img id="icon" src="/assets/laurel-inv.png" />
+          </a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
-            <li><a href="/app/user">User</a></li>
-            <li><a href="/app/logout">Logout</a></li>
+            <li><a id="login" href="/app/login/get-request-token">Login</a></li>
+            <li><a id="username" href="/app/user">User</a></li>
+            <li><a id="logout" href="/app/logout">Logout</a></li>
           </ul>
         </div>
       </div>
@@ -33,5 +39,6 @@
         </div>
       </form>
     </div>
+    <script type="text/javascript" src="/js/static.js"></script>
   </body>
 </html>
