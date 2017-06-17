@@ -1,24 +1,37 @@
 import accomplish
 import datetime
 import db
+import json
+import pymongo
+import user_helpers
 
-from flask import Flask, redirect, request, session, url_for
+from flask import Flask, redirect, request, send_from_directory, session, url_for
 from tweepy.api import API
 from tweepy.auth import OAuthHandler
 from tweepy.error import TweepError
+from bson.objectid import ObjectId
 
 app = Flask(__name__)
 app.secret_key = 'super secret key'
 
 REQUEST_TOKEN_COOKIE = 'request_token'
-TOKEN_SECRET_COOKIE = 'token_secret'
-ACCESS_TOKEN_COOKIE = 'request_token'
-ACCESS_TOKEN_SECRET_COOKIE = 'token_secret'
+
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
+
+@app.route('/js/<path>')
+def send_js(path):
+    return send_from_directory('static/js', path)
+
+@app.route('/assets/<path>')
+def send_assets(path):
+    return send_from_directory('static/assets', path)
 
 @app.route('/app/login/get-request-token')
 def request_token():
-    if _is_logged_in():
-        return "Already logged in!"
+    if user_helpers.is_logged_in():
+        return  "Already logged in!"
     secrets = _get_twitter_secrets()
     if not secrets:
         return 'Could not load twitter secrets'
@@ -28,18 +41,27 @@ def request_token():
         redirect_url = auth.get_authorization_url()
     except TweepError as e:
         return 'Error! Failed to get request token: %s' % e
+    if not auth.request_token['oauth_callback_confirmed']:
+        return 'OAuth callback unconfirmed?'
+    session[REQUEST_TOKEN_COOKIE] = auth.request_token['oauth_token']
     return redirect(redirect_url)
 
 @app.route('/app/login/callback')
 def access_token():
-    if _is_logged_in():
+    if user_helpers.is_logged_in():
         return "Already logged in!"
+    if not REQUEST_TOKEN_COOKIE in session:
+        return 'Request token not set'
     secrets = _get_twitter_secrets()
     if not secrets:
         return 'Could not load twitter secrets'
 
     auth = OAuthHandler(secrets['api_key'], secrets['secret'])
     request_token = request.args.get('oauth_token')
+    # request_token should match the token stored in request_token().
+    if request_token != session[REQUEST_TOKEN_COOKIE]:
+        return '%s did not match request token (%s)' % (
+            request_token, session[REQUEST_TOKEN_COOKIE])
     verifier = request.args.get('oauth_verifier')
     auth.request_token = {
         'oauth_token' : request_token,
@@ -49,46 +71,73 @@ def access_token():
         (access_token, access_token_secret) = auth.get_access_token(verifier)
     except TweepError as e:
         return 'Error! Failed to get access token: %s' % e
-    session[ACCESS_TOKEN_COOKIE] = access_token
-    session[ACCESS_TOKEN_SECRET_COOKIE] = access_token_secret
+
     api = API(auth)
     user_info = api.me()
-    db.get_db().users.insert({
-        'access_token' : access_token,
-        'access_token_secret' : access_token_secret,
-        'username' : user_info.screen_name,
-    })
+    username = user_info.screen_name
+    user_helpers.set_access_token(username, access_token, access_token_secret)
+    db.get_db().users.update({
+        '_id' : username,
+    }, {
+        '$set' : {
+            'access_token' : access_token,
+            'access_token_secret' : access_token_secret
+        },
+    }, upsert = True)
     return "logged in: %s" % access_token
 
 @app.route('/app/logout')
 def logout():
-    session.pop(ACCESS_TOKEN_COOKIE, None)
-    session.pop(ACCESS_TOKEN_SECRET_COOKIE, None)
+    user_helpers.unset()
+    session.pop(REQUEST_TOKEN_COOKIE, None)
     return "Logged out"
 
 @app.route('/app/done', methods=['POST'])
 def done():
-    if not _is_logged_in():
-        return redirect(url_for('/app/login/get-request-token'))
-    user = db.get_db().users.find_one({
-        'access_token' : session[ACCESS_TOKEN_COOKIE],
-    })
-    if not user:
-        return redirect(url_for('/app/logout'))
-
+    if not user_helpers.is_logged_in():
+        return redirect('/app/login/get-request-token')
     accomplishment = accomplish.parse(request.form['accomplishment'])
-    accomplishment['user'] = user['_id']
+    accomplishment['user'] = session[user_helpers.USERNAME_COOKIE]
     accomplishment['created'] = datetime.datetime.now()
+    accomplishment['public'] = False
     db.get_db().accomplishments.insert(accomplishment)
     return redirect('/')
+
+@app.route('/app/api/a/<aid>')
+def a(aid):
+    a = db.get_db().accomplishments.find_one({'_id' : ObjectId(aid)})
+    if not a:
+        return '{}'
+    if a['public']:
+        return json.dumps(a)
+    # Accomplishment exists but is private, check if the target user is the
+    # logged-in user.
+    target_user = db.get_db().users.find_one({'_id' : a['user']})
+    if user_helpers.is_same(target_user):
+        return json.dumps(a)
+    return '{}'
+
+@app.route('/app/api/timeline/<username>')
+def timeline(username):
+    query = {'user' : username}
+    target_user = db.get_db().users.find_one({'_id' : username})
+    if not user_helpers.is_same(target_user):
+        app.logger.warning('public only: %s' % session)
+        query['public'] = True
+    cursor = db.get_db().accomplishments.find(query).limit(100).sort(
+        'created', pymongo.DESCENDING
+    )
+    entries = []
+    for doc in cursor:
+        entries.append({
+            'a' : doc['a'],
+            'created' : doc['created'].strftime('%I:%M%p %B %d, %Y'),
+        })
+    return json.dumps(entries)
 
 @app.teardown_appcontext
 def close(error):
     db.close_db()
-
-def _is_logged_in():
-    return ACCESS_TOKEN_COOKIE in session and \
-        ACCESS_TOKEN_SECRET_COOKIE in session
 
 def _get_twitter_secrets():
     return db.get_db().secrets.find_one({'_id' : 'twitter'})

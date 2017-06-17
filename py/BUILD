@@ -4,10 +4,5 @@ flask(
     name = "py",
     srcs = glob(["*.py"]),
     app = "main.py",
-    data = [":static"],
-)
-
-filegroup(
-    name = "static",
-    srcs = glob(["static/*"]),
+    data = ["//py/static"],
 )
