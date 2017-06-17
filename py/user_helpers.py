@@ -28,13 +28,23 @@ def is_logged_in():
     return user['access_token'] == session[ACCESS_TOKEN_COOKIE] \
         and user['access_token_secret'] == session[ACCESS_TOKEN_SECRET_COOKIE]
 
+def setup_user(response):
+    assert USERNAME_COOKIE in session
+    user = db.get_db().users.find_one({'_id' : session[USERNAME_COOKIE]})
+    set_access_token(
+        user['_id'],
+        user['access_token'],
+        user['access_token_secret'],
+        response)
 
-def set_access_token(username, access_token, access_token_secret):
+def set_access_token(username, access_token, access_token_secret, response):
     session[USERNAME_COOKIE] = username
     session[ACCESS_TOKEN_COOKIE] = access_token
     session[ACCESS_TOKEN_SECRET_COOKIE] = access_token_secret
+    response.set_cookie(USERNAME_COOKIE, username)
 
-def unset():
+def unset(response):
     session.pop(USERNAME_COOKIE, None)
     session.pop(ACCESS_TOKEN_COOKIE, None)
     session.pop(ACCESS_TOKEN_SECRET_COOKIE, None)
+    response.set_cookie(USERNAME_COOKIE, expires=0)

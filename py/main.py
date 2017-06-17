@@ -5,13 +5,14 @@ import json
 import pymongo
 import user_helpers
 
-from flask import Flask, redirect, request, send_from_directory, session, url_for
+from flask import Flask, make_response, redirect, request, send_from_directory, session, url_for
 from tweepy.api import API
 from tweepy.auth import OAuthHandler
 from tweepy.error import TweepError
 from bson.objectid import ObjectId
 
 app = Flask(__name__)
+# This is required for Flask to work.
 app.secret_key = 'super secret key'
 
 REQUEST_TOKEN_COOKIE = 'request_token'
@@ -19,6 +20,10 @@ REQUEST_TOKEN_COOKIE = 'request_token'
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
+
+@app.route('/user.html')
+def user():
+    return app.send_static_file('user.html')
 
 @app.route('/js/<path>')
 def send_js(path):
@@ -31,7 +36,9 @@ def send_assets(path):
 @app.route('/app/login/get-request-token')
 def request_token():
     if user_helpers.is_logged_in():
-        return  "Already logged in!"
+        response = make_response('Already logged in!')
+        user_helpers.setup_user(response)
+        return response
     secrets = _get_twitter_secrets()
     if not secrets:
         return 'Could not load twitter secrets'
@@ -49,7 +56,9 @@ def request_token():
 @app.route('/app/login/callback')
 def access_token():
     if user_helpers.is_logged_in():
-        return "Already logged in!"
+        response = make_response('Already logged in!')
+        user_helpers.setup_user(response)
+        return response
     if not REQUEST_TOKEN_COOKIE in session:
         return 'Request token not set'
     secrets = _get_twitter_secrets()
@@ -75,7 +84,8 @@ def access_token():
     api = API(auth)
     user_info = api.me()
     username = user_info.screen_name
-    user_helpers.set_access_token(username, access_token, access_token_secret)
+    response = make_response('Logged in: %s' % access_token)
+    user_helpers.set_access_token(username, access_token, access_token_secret, response)
     db.get_db().users.update({
         '_id' : username,
     }, {
@@ -84,13 +94,14 @@ def access_token():
             'access_token_secret' : access_token_secret
         },
     }, upsert = True)
-    return "logged in: %s" % access_token
+    return response
 
 @app.route('/app/logout')
 def logout():
-    user_helpers.unset()
+    response = make_response('Logged out')
+    user_helpers.unset(response)
     session.pop(REQUEST_TOKEN_COOKIE, None)
-    return "Logged out"
+    return response
 
 @app.route('/app/done', methods=['POST'])
 def done():

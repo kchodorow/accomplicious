@@ -1,16 +1,10 @@
-/* global $ */
+/* global $, d3 */
 
 var Timeline = function() {
 };
 
 var loadTimeline = function(responses) {
-  let timeline = $('#timeline');
-  for (let i = 0; i < responses.length; ++i) {
-    let response = responses[i];
-    let div = $('<div/>').appendTo(timeline);;
-    $('<a/>').attr('href', response.url).text(response.created).appendTo(div);
-    $('<p/>').html(response.a).appendTo(div);
-  }
+  var svgContainer = d3.select('#timeline').append('p').text('Nothing on the timeline, yet.');
 };
 
 if (username != '') {
