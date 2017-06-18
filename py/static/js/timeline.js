@@ -21,7 +21,7 @@ var loadTimeline = function(responses) {
     var a = responses[i];
     graph.nodes.push({id : i, group : 1, value : a.a});
     if (i > 0) {
-      graph.links.push({source : i - 1, target : i, value : 16});
+      graph.links.push({source : i - 1, target : i, value : 1});
     }
   }
 
@@ -65,11 +65,11 @@ var loadTimeline = function(responses) {
       .attr("y2", function(d) { return d.target.y; });
 
     node
-      .attr("cx", function(d) { return d.x - 10; })
-      .attr("cy", function(d) { return d.y - 5; });
+      .attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; });
     text
-      .attr("x", function(d) { return d.x; })
-      .attr("y", function(d) { return d.y; });
+      .attr("x", function(d) { return d.x + 10; })
+      .attr("y", function(d) { return d.y + 5; });
   }
 };
 
