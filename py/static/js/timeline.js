@@ -4,8 +4,8 @@ var Timeline = function() {
 };
 
 var svg = d3.select('svg');
-var width = svg.attr("width");
-var height = svg.attr("height");
+var width = +svg.attr("width");
+var height = +svg.attr("height");
 var simulation = d3.forceSimulation()
       .force("link", d3.forceLink().id(function(d) { return d.id; }))
       .force("charge", d3.forceManyBody())
@@ -34,28 +34,39 @@ var loadTimeline = function(responses) {
         .enter().append("line")
         .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
 
-  var nodeGroups = svg.append("g")
-        .attr("class", "nodes")
-        .selectAll("circle")
-        .data(graph.nodes)
-        .enter();
-  var node = nodeGroups.append("circle")
-        .attr("r", 5)
-        .attr("fill", function(d) { return color(d.group); })
-        .call(d3.drag()
-              .on("start", dragstarted)
-              .on("drag", dragged)
-              .on("end", dragended));
+  let nodes = [];
+  let rects = [];
+  let texts = [];
+  for (let i = 0; i < graph.nodes.length; ++i) {
+    var nodeGroup = svg.append("g")
+          .attr("class", "nodes")
+          .selectAll("circle")
+          .data([graph.nodes[i]])
+          .enter();
+    let node = nodeGroup.append("circle")
+          .attr("r", 5)
+          .attr("fill", function(d) { return color(d.group); })
+          .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+    let rect = nodeGroup.append("rect")
+          .attr('stroke', '#999')
+          .attr('fill', 'white');
+    let text = nodeGroup.append("text")
+          .attr('alignment-baseline', 'middle')
+          .text(function(d) { return d.value; });
+    let bBox = text.node().getBBox();
+    rect.attr('height', bBox.height + 15)
+      .attr('width', bBox.width + 20);
+    nodes.push(node);
+    rects.push(rect);
+    texts.push(text);
+  }
 
-  var text = nodeGroups.append("text")
-        .text(function(d) { return d.value; });
+  simulation.nodes(graph.nodes).on("tick", ticked);
 
-  simulation
-    .nodes(graph.nodes)
-    .on("tick", ticked);
-
-  simulation.force("link")
-    .links(graph.links);
+  simulation.force("link").links(graph.links);
 
   function ticked() {
     link
@@ -63,13 +74,17 @@ var loadTimeline = function(responses) {
       .attr("y1", function(d) { return d.source.y; })
       .attr("x2", function(d) { return d.target.x; })
       .attr("y2", function(d) { return d.target.y; });
-
-    node
-      .attr("cx", function(d) { return d.x; })
-      .attr("cy", function(d) { return d.y; });
-    text
-      .attr("x", function(d) { return d.x + 10; })
-      .attr("y", function(d) { return d.y + 5; });
+    for (let i = 0; i < nodes.length; ++i) {
+      nodes[i]
+        .attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
+      rects[i]
+        .attr('x', function(d) { return d.x; })
+        .attr('y', function(d) { return d.y; });
+      texts[i]
+        .attr("x", function(d) { return d.x + 5; })
+        .attr("y", function(d) { return d.y + 17; });
+    }
   }
 };
 
