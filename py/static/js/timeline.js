@@ -65,8 +65,8 @@ var loadTimeline = function(responses) {
       .attr("y2", function(d) { return d.target.y; });
 
     node
-      .attr("cx", function(d) { return d.x; })
-      .attr("cy", function(d) { return d.y; });
+      .attr("cx", function(d) { return d.x - 10; })
+      .attr("cy", function(d) { return d.y - 5; });
     text
       .attr("x", function(d) { return d.x; })
       .attr("y", function(d) { return d.y; });
