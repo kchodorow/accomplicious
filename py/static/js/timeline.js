@@ -19,9 +19,9 @@ var loadTimeline = function(responses) {
   var graph = {links : [], nodes : []};
   for (let i = 0; i < responses.length; ++i) {
     var a = responses[i];
-    graph.nodes.push({id : a.a, group : 1});
+    graph.nodes.push({id : i, group : 1, value : a.a});
     if (i > 0) {
-      graph.links.push({source : responses[i - 1].a, target : a.a, value : 1});
+      graph.links.push({source : i - 1, target : i, value : 16});
     }
   }
 
@@ -34,11 +34,12 @@ var loadTimeline = function(responses) {
         .enter().append("line")
         .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
 
-  var node = svg.append("g")
+  var nodeGroups = svg.append("g")
         .attr("class", "nodes")
         .selectAll("circle")
         .data(graph.nodes)
-        .enter().append("circle")
+        .enter();
+  var node = nodeGroups.append("circle")
         .attr("r", 5)
         .attr("fill", function(d) { return color(d.group); })
         .call(d3.drag()
@@ -46,8 +47,8 @@ var loadTimeline = function(responses) {
               .on("drag", dragged)
               .on("end", dragended));
 
-  node.append("title")
-    .text(function(d) { return d.id; });
+  var text = nodeGroups.append("text")
+        .text(function(d) { return d.value; });
 
   simulation
     .nodes(graph.nodes)
@@ -66,6 +67,9 @@ var loadTimeline = function(responses) {
     node
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; });
+    text
+      .attr("x", function(d) { return d.x; })
+      .attr("y", function(d) { return d.y; });
   }
 };
 
