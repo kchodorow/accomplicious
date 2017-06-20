@@ -1,0 +1,7 @@
+{
+    "name": "Accomploji",
+    "description": "Emoji-based accomplishment tracker.",
+    "image": "heroku/python",
+    "repository": "https://github.com/kchodorow/accomplicious",
+    "addons": [ "heroku-mongodb" ]
+}
