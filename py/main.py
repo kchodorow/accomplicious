@@ -2,6 +2,7 @@ import accomplish
 import datetime
 import db
 import json
+import os
 import pymongo
 import user_helpers
 
@@ -151,4 +152,7 @@ def close(error):
     db.close_db()
 
 def _get_twitter_secrets():
-    return db.get_db().secrets.find_one({'_id' : 'twitter'})
+    return {
+        "api_key" : os.environ['TWITTER_API_KEY'],
+        "secret" : os.environ['TWITTER_API_SECRET'],
+    }
