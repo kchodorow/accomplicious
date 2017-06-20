@@ -15,4 +15,4 @@ def parse(accomplishment):
     }
 
 def _get_random():
-    return random.choice(emoji.unicode_codes.UNICODE_EMOJI_ALIAS.keys())
+    return random.choice(list(emoji.unicode_codes.UNICODE_EMOJI_ALIAS.keys()))

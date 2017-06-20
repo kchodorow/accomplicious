@@ -4,11 +4,6 @@ Emogi-based accomplishment tracker.
 
 ## Prerequisites:
 
-```
-pip install virtualenv Flask tweepy pymongo emoji
-virtualenv venv
-```
-
 Run MongoDB.  I've been running a local instance pointed to a db directory for
 dev:
 
@@ -17,19 +12,23 @@ mkdir db
 mongod --dbpath db
 ```
 
-Then add Twitter secrets:
+Create a `.env` file with the following content:
 
 ```
-use accomploji
-API_KEY = '<API KEY>'
-SECRET = '<SECRET>'
-db.secrets.insert({_id : 'twitter', api_key : API_KEY, secret : SECRET})
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DB=testdb
+TWITTER_API_KEY=...
+TWITTER_API_SECRET=...
 ```
 
-## Running
+## Test
 
 ```
-bazel run //py
+heroku local
 ```
 
-The web app uses Bootstrap & D3 from CDNs, so the HTML won't look right offline.
+## Deploy
+
+```
+git push heroku
+```
