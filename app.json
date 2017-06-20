@@ -3,5 +3,10 @@
     "description": "Emoji-based accomplishment tracker.",
     "image": "heroku/python",
     "repository": "https://github.com/kchodorow/accomplicious",
-    "addons": [ "heroku-mongodb" ]
+    "addons": [ "heroku-mongodb" ],
+    "buildpacks": [
+        {
+            "url": "heroku/python",
+        }
+    ]
 }
